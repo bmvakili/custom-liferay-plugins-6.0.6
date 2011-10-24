@@ -3,6 +3,9 @@
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
 <%@ page isELIgnored ="false" %> 
 
+<%
+	String selectPageHTMLCode = request.getAttribute("selectPageHTMLCode").toString();
+%>
 <portlet:defineObjects />
 <portlet:renderURL var="generateURL">
 </portlet:renderURL>
@@ -30,6 +33,10 @@ For the impatient, it is as follows:<br/>
 **Level 2
 ***Level 3
 </textarea>
+<aui:select name="rootNodeLayoutId" label="Root Node">
+<option value="0">--Top-Most-Level--</option>
+<%= selectPageHTMLCode %>
+</aui:select>
 <aui:button type="submit" value="Submit"></aui:button>
 </aui:form>
 </aside>

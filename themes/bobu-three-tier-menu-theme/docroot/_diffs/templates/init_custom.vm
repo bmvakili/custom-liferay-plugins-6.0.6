@@ -1,0 +1,14 @@
+
+#set ($globalFooterGroupId = $theme_settings.getProperty("footer-group-id"))
+#set ($globalFooterTemplateId = $theme_settings.getProperty("footer-template-id"))
+#set ($globalFooterArticleId = $theme_settings.getProperty("footer-article-id"))
+#set ($footerContent = $journalContentUtil.getContent($group_id.parseLong($globalFooterGroupId), $globalFooterArticleId, null, null, "$locale", $theme_display))
+
+#set ($globalHeaderGroupId = $theme_settings.getProperty("header-group-id"))
+#set ($globalHeaderArticleId = $theme_settings.getProperty("header-article-id"))
+#set ($globalHeaderTemplateId = $theme_settings.getProperty("header-template-id"))
+#set ($headerContent = $journalContentUtil.getContent($group_id.parseLong($globalHeaderGroupId), $globalHeaderArticleId, $globalHeaderTemplateId, null, "$locale", $theme_display))
+
+#if (!$footerContent)
+#set ($footerContent = $journalContentUtil.getContent($group_id.parseLong($globalHeaderGroupId), "11772", null, null, "$locale", $theme_display))
+#end

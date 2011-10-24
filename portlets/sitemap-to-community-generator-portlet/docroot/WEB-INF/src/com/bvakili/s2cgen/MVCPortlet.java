@@ -2,15 +2,20 @@ package com.bvakili.s2cgen;
 
 import java.io.IOException;
 
+import java.util.List;
+import java.util.Locale;
+
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import com.liferay.portal.model.Layout;
+import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 public class MVCPortlet extends com.liferay.util.bridges.mvc.MVCPortlet {
@@ -18,12 +23,15 @@ public class MVCPortlet extends com.liferay.util.bridges.mvc.MVCPortlet {
 	public void doView(RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 			String sitemap = renderRequest.getParameter("sitemap");
+			long rootLayoutId = ParamUtil.getLong(renderRequest, "rootNodeLayoutId", 0l);
 			ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
-			createPagesFromSitemap(sitemap, themeDisplay);
+			createPagesFromSitemap(sitemap, themeDisplay, rootLayoutId);
+			String selectPageHTMLCode = selectPageHTMLCode(themeDisplay);
+			renderRequest.setAttribute("selectPageHTMLCode", selectPageHTMLCode);
 			include(viewJSP, renderRequest, renderResponse);
 		}
-		private void createPagesFromSitemap(String sitemap, ThemeDisplay themeDisplay) {
+		private void createPagesFromSitemap(String sitemap, ThemeDisplay themeDisplay, long rootLayoutId) {
 			try {
 			if (sitemap == null) {
 				return;
@@ -54,11 +62,11 @@ public class MVCPortlet extends com.liferay.util.bridges.mvc.MVCPortlet {
 				if (level > prevLevel + 1) {
 					return;
 				}
-				if (rootLayout == null) {
+				if (curLayout == null) {
 					if (level != 0) {
 						return;
 					}
-					rootLayout = addPage(page, 0, themeDisplay);
+					rootLayout = addPage(page, rootLayoutId, themeDisplay);
 					curLayout = rootLayout;
 				} else if (prevLayout == null) {
 					long layoutId = 0;
@@ -103,7 +111,6 @@ public class MVCPortlet extends com.liferay.util.bridges.mvc.MVCPortlet {
 	private Layout addPage(String page, long parentLayoutId, ThemeDisplay themeDisplay) throws com.liferay.portal.kernel.exception.PortalException, com.liferay.portal.kernel.exception.SystemException {
 		long userId = themeDisplay.getUserId();
 		long scopeGroupId = themeDisplay.getScopeGroupId();
-		String friendlyUrl = page.replaceAll("[^a-zA-Z0-9]","_").trim().toLowerCase();
 		ServiceContext serviceContext = new ServiceContext();
 		if (_log.isDebugEnabled()) {
 			_log.debug("adding : " + page + " to " + parentLayoutId);
@@ -137,6 +144,55 @@ public class MVCPortlet extends com.liferay.util.bridges.mvc.MVCPortlet {
 			}
 		}
 		return level;
+	}
+
+	private String selectPageHTMLCode(ThemeDisplay themeDisplay) {
+		String retVal = "";
+		if (_log.isDebugEnabled()) {
+			_log.debug("MVCPortlet::doView::selectPageHTMLCode");
+			_log.debug("Generating page layout ids");
+		}
+		try {
+			long scopeGroupId = themeDisplay.getScopeGroupId();
+			Locale locale = themeDisplay.getLocale();
+			List<Layout> children = LayoutLocalServiceUtil.getLayouts(scopeGroupId, false);
+			for (Layout child : children) {
+				if (child.getParentLayoutId() == 0) {
+					if (_log.isDebugEnabled()) {
+						_log.debug("Processing child " + child.getName(locale));
+					}
+					retVal += selectPageHTMLCode(child, 0, locale);
+				}
+			}
+		}catch(Exception e) { 
+			_log.error(e);
+		}
+		return retVal;
+	}
+
+	private String selectPageHTMLCode(Layout root, int level, Locale locale) {
+		String retVal = "";
+		try {
+			List<Layout> children = root.getChildren();
+			retVal = "<option value='" + root.getLayoutId() + "'>" + getLevelString(level) + root.getName(locale) + "</option>";
+		if (_log.isDebugEnabled()) {
+			_log.debug("Got " + children.size() + " children layouts for page with title " +  retVal);
+		}
+			for (Layout child : children) {
+				retVal += selectPageHTMLCode(child, level + 1, locale);
+			}
+		} catch(Exception e) {
+			_log.error(e);
+		}
+		return retVal;
+	}
+
+	private String getLevelString(int level) {
+		String retVal = "";
+		for (int i = 0; i < level; i++) {
+			retVal += '+';
+		}
+		return retVal;
 	}
 	private static Log _log = LogFactoryUtil.getLog(MVCPortlet.class);
 }
