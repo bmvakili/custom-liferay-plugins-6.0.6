@@ -4,7 +4,7 @@
 
 #navigation {
 	background: #804B12;
-	z-index: 1000;
+	z-index: 1;
 }
 
 #navigation ul {
@@ -117,6 +117,7 @@
 
 #footer-links {
 	text-align: center;
+	font-weight: bold;
 }
 
 #footer-links, #navigation, #navigation a {
