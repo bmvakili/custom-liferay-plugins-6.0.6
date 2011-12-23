@@ -4,7 +4,7 @@
 
 #navigation {
 	background: #804B12;
-	z-index: 1;
+	z-index: auto;
 }
 
 #navigation ul {
