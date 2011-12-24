@@ -125,3 +125,21 @@
 	-webkit-border-radius: 4px;
 	border-radius: 4px;
 }
+
+body {
+	background-color: #FFFFFF;
+	width: 1000px;
+	margin: auto;
+}
+
+aui-w73 {
+	width: 73%;
+}
+
+aui-w27 {
+	width: 27%;
+}
+
+#wrapper {
+	max-width: 1000px;
+}
